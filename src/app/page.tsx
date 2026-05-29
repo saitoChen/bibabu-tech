@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { parseExcelFile } from '@/lib/processExcel';
-import DataTable from '@/components/DataTable';
+import DataTable, { DataTableRef } from '@/components/DataTable';
 import { SheetData } from '@/types/excel';
 
 export default function Home() {
@@ -11,7 +11,10 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>('');
+  const [searchDate, setSearchDate] = useState<string>('');
+  const [searchError, setSearchError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const tableRef = useRef<DataTableRef>(null);
 
   const handleFile = useCallback(async (file: File) => {
     if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
@@ -65,10 +68,37 @@ export default function Home() {
     setSheetData(null);
     setFileName('');
     setError(null);
+    setSearchDate('');
+    setSearchError('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   }, []);
+
+  const handleSearch = useCallback(() => {
+    if (!searchDate || !tableRef.current) return;
+
+    const formattedDate = searchDate.replace(/-/g, '/');
+    const success = tableRef.current.scrollToDate(formattedDate);
+
+    if (!success) {
+      setSearchError('未找到该日期的数据');
+      setTimeout(() => setSearchError(''), 3000);
+    } else {
+      setSearchError('');
+    }
+  }, [searchDate]);
+
+  const handleDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchDate(e.target.value);
+    setSearchError('');
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  }, [handleSearch]);
 
   if (sheetData) {
     return (
@@ -86,17 +116,45 @@ export default function Home() {
                 <p className="text-xs text-gray-500">{fileName}</p>
               </div>
             </div>
-            <button
-              onClick={handleReset}
-              className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-            >
-              重新上传
-            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={searchDate}
+                    onChange={handleDateChange}
+                    onKeyDown={handleKeyDown}
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="选择日期"
+                  />
+                  {searchError && (
+                    <span className="absolute top-full left-0 mt-1 text-xs text-red-500 whitespace-nowrap">
+                      {searchError}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={handleSearch}
+                  disabled={!searchDate}
+                  className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                >
+                  定位
+                </button>
+              </div>
+
+              <button
+                onClick={handleReset}
+                className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+              >
+                重新上传
+              </button>
+            </div>
           </div>
         </header>
 
         <main className="max-w-[1600px] mx-auto px-4 py-4">
-          <DataTable data={sheetData} />
+          <DataTable ref={tableRef} data={sheetData} />
         </main>
       </div>
     );
@@ -132,7 +190,7 @@ export default function Home() {
             onChange={handleFileSelect}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           />
-          
+
           <div className="text-center">
             <div className={`w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center ${
               isDragging ? 'bg-blue-100' : 'bg-gray-100'
@@ -141,7 +199,7 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
             </div>
-            
+
             {isLoading ? (
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-2">正在解析文件...</p>

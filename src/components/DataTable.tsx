@@ -1,9 +1,14 @@
 'use client';
 
+import { useRef, useImperativeHandle, forwardRef } from 'react';
 import { CellData, SheetData } from '@/types/excel';
 
 interface DataTableProps {
   data: SheetData;
+}
+
+export interface DataTableRef {
+  scrollToDate: (dateStr: string) => boolean;
 }
 
 function getCellStyle(cell: CellData): {
@@ -16,15 +21,15 @@ function getCellStyle(cell: CellData): {
     fontWeight: cell.bold ? 'bold' : 'normal',
     whiteSpace: 'pre-wrap'
   };
-  
+
   if (cell.color === 'red') {
     style.color = 'rgb(239 68 68)';
   }
-  
+
   if (cell.fontFamily) {
     style.fontFamily = cell.fontFamily;
   }
-  
+
   return style;
 }
 
@@ -32,7 +37,7 @@ function renderCellValue(value: string | number | null): React.ReactNode {
   if (value === null || value === undefined) {
     return '';
   }
-  
+
   if (typeof value === 'string') {
     return value.split('\n').map((line, index) => (
       <span key={index}>
@@ -41,12 +46,47 @@ function renderCellValue(value: string | number | null): React.ReactNode {
       </span>
     ));
   }
-  
+
   return String(value);
 }
 
-export default function DataTable({ data }: DataTableProps) {
+const DataTable = forwardRef<DataTableRef, DataTableProps>(function DataTable({ data }, ref) {
   const { headers, rows } = data;
+  const tableRef = useRef<HTMLTableElement>(null);
+  const headerRefs = useRef<(HTMLTableCellElement | null)[]>([]);
+
+  useImperativeHandle(ref, () => ({
+    scrollToDate: (dateStr: string) => {
+      const normalizedDate = dateStr.replace(/-/g, '/');
+      const index = headers.findIndex(h => {
+        const headerValue = String(h.value || '');
+        return headerValue === normalizedDate || headerValue === dateStr;
+      });
+
+      if (index === -1 || !tableRef.current) return false;
+
+      const thElement = headerRefs.current[index];
+      if (!thElement) return false;
+
+      const container = tableRef.current.closest('.overflow-x-auto');
+      if (!container) return false;
+
+      const containerRect = container.getBoundingClientRect();
+      const thRect = thElement.getBoundingClientRect();
+
+      container.scrollTo({
+        left: container.scrollLeft + thRect.left - containerRect.left - 20,
+        behavior: 'smooth'
+      });
+
+      thElement.classList.add('bg-yellow-200');
+      setTimeout(() => {
+        thElement.classList.remove('bg-yellow-200');
+      }, 2000);
+
+      return true;
+    }
+  }));
 
   if (headers.length === 0) {
     return (
@@ -58,13 +98,14 @@ export default function DataTable({ data }: DataTableProps) {
 
   return (
     <div className="w-full overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
-      <table className="w-full text-sm text-left min-w-[2000px]">
+      <table ref={tableRef} className="w-full text-sm text-left min-w-[2000px]">
         <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
           <tr>
             {headers.map((header, index) => (
               <th
                 key={index}
-                className="px-4 py-3 font-semibold text-gray-700 border-r border-gray-200 last:border-r-0 min-w-[230px] max-w-[350px]"
+                ref={el => { headerRefs.current[index] = el; }}
+                className="px-4 py-3 font-semibold text-gray-700 border-r border-gray-200 last:border-r-0 min-w-[230px] max-w-[350px] transition-colors duration-300"
                 style={getCellStyle(header)}
               >
                 {renderCellValue(header.value)}
@@ -93,4 +134,6 @@ export default function DataTable({ data }: DataTableProps) {
       </table>
     </div>
   );
-}
+});
+
+export default DataTable;
