@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { parseExcelFile } from '@/lib/processExcel';
 import { SheetData } from '@/types/excel';
+import { useAuth } from '@/hooks/useAuth';
 
 interface StoredData {
   data: SheetData;
@@ -17,6 +18,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   const saveData = async (data: SheetData, name: string) => {
     try {
@@ -81,6 +83,21 @@ export default function Home() {
       handleFile(files[0]);
     }
   }, [handleFile]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 mx-auto mb-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-500">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">

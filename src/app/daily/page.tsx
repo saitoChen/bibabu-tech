@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import DataTable, { DataTableRef } from '@/components/DataTable';
 import { SheetData } from '@/types/excel';
+import { useAuth } from '@/hooks/useAuth';
 
 interface StoredData {
   data: SheetData;
@@ -19,10 +20,13 @@ export default function DailyPage() {
   const [isLoading, setIsLoading] = useState(true);
   const tableRef = useRef<DataTableRef>(null);
   const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
-    fetchStoredData();
-  }, []);
+    if (isAuthenticated) {
+      fetchStoredData();
+    }
+  }, [isAuthenticated]);
 
   const fetchStoredData = async () => {
     try {
@@ -68,6 +72,21 @@ export default function DailyPage() {
   const handleReset = useCallback(() => {
     router.push('/');
   }, [router]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 mx-auto mb-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-500">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   if (isLoading) {
     return (
