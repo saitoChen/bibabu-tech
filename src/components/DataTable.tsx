@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useImperativeHandle, forwardRef } from 'react';
+import { useRef, useImperativeHandle, forwardRef, useState, useEffect } from 'react';
 import { CellData, SheetData } from '@/types/excel';
 
 interface DataTableProps {
@@ -54,6 +54,29 @@ const DataTable = forwardRef<DataTableRef, DataTableProps>(function DataTable({ 
   const { headers, rows } = data;
   const tableRef = useRef<HTMLTableElement>(null);
   const headerRefs = useRef<(HTMLTableCellElement | null)[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [expandedColumns, setExpandedColumns] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const toggleColumn = (colIndex: number) => {
+    setExpandedColumns(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(colIndex)) {
+        newSet.delete(colIndex);
+      } else {
+        newSet.add(colIndex);
+      }
+      return newSet;
+    });
+  };
 
   useImperativeHandle(ref, () => ({
     scrollToDate: (dateStr: string) => {
@@ -96,6 +119,76 @@ const DataTable = forwardRef<DataTableRef, DataTableProps>(function DataTable({ 
     );
   }
 
+  // 移动端：按列展示，每列是一个卡片
+  if (isMobile) {
+    return (
+      <div className="w-full space-y-4">
+        {headers.map((header, colIndex) => {
+          const isExpanded = expandedColumns.has(colIndex);
+          // 找到红字行（前3行内）
+          const redRowIndices: number[] = [];
+          for (let i = 0; i < Math.min(3, rows.length); i++) {
+            if (rows[i] && rows[i][colIndex] && rows[i][colIndex].color === 'red') {
+              redRowIndices.push(i);
+            }
+          }
+
+          return (
+            <div
+              key={colIndex}
+              className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+            >
+              {/* 日期头部 */}
+              <div
+                className="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 cursor-pointer flex items-center justify-between"
+                onClick={() => toggleColumn(colIndex)}
+              >
+                <span style={getCellStyle(header)}>
+                  {renderCellValue(header.value)}
+                </span>
+                <svg
+                  className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+
+              {/* 红字卡片内容 */}
+              <div className="px-4 py-3 space-y-2">
+                {redRowIndices.map(rowIndex => (
+                  <div key={rowIndex} style={getCellStyle(rows[rowIndex][colIndex])}>
+                    {renderCellValue(rows[rowIndex][colIndex].value)}
+                  </div>
+                ))}
+              </div>
+
+              {/* 展开后的详细内容 */}
+              {isExpanded && (
+                <div className="px-4 py-3 border-t border-gray-100 space-y-3">
+                  {rows.map((row, rowIndex) => {
+                    // 跳过红字行（已显示）
+                    if (redRowIndices.includes(rowIndex)) return null;
+                    const cell = row[colIndex];
+                    if (!cell.value) return null;
+                    return (
+                      <div key={rowIndex} className="text-sm text-gray-700" style={getCellStyle(cell)}>
+                        {renderCellValue(cell.value)}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // 桌面端：保持原有表格布局
   return (
     <div className="w-full overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
       <table ref={tableRef} className="w-full text-sm text-left min-w-[2000px]">
