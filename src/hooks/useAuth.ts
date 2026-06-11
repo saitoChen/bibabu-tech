@@ -11,6 +11,7 @@ interface AuthState {
 export function useAuth(): AuthState {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -80,8 +81,14 @@ export function useAuth(): AuthState {
   }, [pathname, router]);
 
   useEffect(() => {
+    setMounted(true);
     checkAuth();
   }, [checkAuth]);
+
+  // SSR 阶段返回一致的初始状态，避免 hydration mismatch
+  if (!mounted) {
+    return { isAuthenticated: false, isLoading: true };
+  }
 
   return { isAuthenticated, isLoading };
 }

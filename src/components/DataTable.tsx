@@ -57,8 +57,10 @@ const DataTable = forwardRef<DataTableRef, DataTableProps>(function DataTable({ 
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [isMobile, setIsMobile] = useState(false);
   const [expandedColumns, setExpandedColumns] = useState<Set<number>>(new Set());
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
@@ -147,7 +149,7 @@ const DataTable = forwardRef<DataTableRef, DataTableProps>(function DataTable({ 
   }
 
   // 移动端：按列展示，每列是一个卡片
-  if (isMobile) {
+  if (mounted && isMobile) {
     return (
       <div className="w-full space-y-4">
         {headers.map((header, colIndex) => {
