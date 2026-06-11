@@ -54,6 +54,7 @@ const DataTable = forwardRef<DataTableRef, DataTableProps>(function DataTable({ 
   const { headers, rows } = data;
   const tableRef = useRef<HTMLTableElement>(null);
   const headerRefs = useRef<(HTMLTableCellElement | null)[]>([]);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [isMobile, setIsMobile] = useState(false);
   const [expandedColumns, setExpandedColumns] = useState<Set<number>>(new Set());
 
@@ -86,7 +87,33 @@ const DataTable = forwardRef<DataTableRef, DataTableProps>(function DataTable({ 
         return headerValue === normalizedDate || headerValue === dateStr;
       });
 
-      if (index === -1 || !tableRef.current) return false;
+      if (index === -1) return false;
+
+      // 移动端：纵向滚动到对应卡片
+      if (isMobile) {
+        const cardElement = cardRefs.current[index];
+        if (!cardElement) return false;
+
+        cardElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // 自动展开该卡片
+        setExpandedColumns(prev => {
+          const newSet = new Set(prev);
+          newSet.add(index);
+          return newSet;
+        });
+
+        // 高亮效果
+        cardElement.classList.add('ring-2', 'ring-blue-400');
+        setTimeout(() => {
+          cardElement.classList.remove('ring-2', 'ring-blue-400');
+        }, 2000);
+
+        return true;
+      }
+
+      // PC端：横向滚动到对应列
+      if (!tableRef.current) return false;
 
       const thElement = headerRefs.current[index];
       if (!thElement) return false;
@@ -136,7 +163,8 @@ const DataTable = forwardRef<DataTableRef, DataTableProps>(function DataTable({ 
           return (
             <div
               key={colIndex}
-              className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+              ref={el => { cardRefs.current[colIndex] = el; }}
+              className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden transition-all duration-300"
             >
               {/* 日期头部 */}
               <div
