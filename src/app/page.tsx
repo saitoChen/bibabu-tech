@@ -173,6 +173,15 @@ export default function Home() {
             <p className="text-sm text-red-600">{error}</p>
           </div>
         )}
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => router.push('/daily')}
+            className="px-4 py-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+          >
+            进入日报页面
+          </button>
+        </div>
       </div>
     </div>
   );
