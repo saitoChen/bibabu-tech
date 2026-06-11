@@ -30,7 +30,9 @@ export default function LoginPage() {
 
       if (result.valid) {
         localStorage.setItem('auth_key', key.trim());
-        localStorage.setItem('auth_expires', result.expiresAt);
+        if (result.expiresAt) {
+          localStorage.setItem('auth_expires', result.expiresAt);
+        }
         router.push('/');
       } else {
         setError('密钥无效或已过期');

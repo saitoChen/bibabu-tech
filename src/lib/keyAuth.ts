@@ -4,11 +4,11 @@ import path from 'path';
 
 const KEY_FILE = path.join(process.cwd(), 'data', 'auth-key.json');
 
-// 配置：密钥更新周期（毫秒）
-// 调试阶段：3分钟 = 3 * 60 * 1000 = 180000
-// 生产环境：每月1号更新
-export const KEY_UPDATE_INTERVAL = 3 * 60 * 1000; // 3分钟，调试阶段
-// export const KEY_UPDATE_INTERVAL = 30 * 24 * 60 * 60 * 1000; // 30天，生产环境
+// 获取下个月第一天的日期
+function getNextMonthFirstDay(): Date {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
+}
 
 interface AuthKeyData {
   currentKey: string;
@@ -57,9 +57,9 @@ export function getOrCreateKey(): AuthKeyData {
     }
   }
 
-  // 密钥过期，生成新密钥
+  // 密钥过期，生成新密钥，过期时间为下个月第一天
   const newKey = generateKey();
-  const expiresAt = new Date(now.getTime() + KEY_UPDATE_INTERVAL);
+  const expiresAt = getNextMonthFirstDay();
 
   const keyData: AuthKeyData = {
     currentKey: newKey,
@@ -76,11 +76,11 @@ export function refreshKey(): AuthKeyData {
   const now = new Date();
   const existing = readKeyData();
   const newKey = generateKey();
-  const expiresAt = new Date(now.getTime() + KEY_UPDATE_INTERVAL);
+  const expiresAt = getNextMonthFirstDay();
 
   const keyData: AuthKeyData = {
     currentKey: newKey,
-    previousKey: existing?.currentKey || '',
+    previousKey: '',
     createdAt: now.toISOString(),
     expiresAt: expiresAt.toISOString(),
   };
@@ -89,7 +89,15 @@ export function refreshKey(): AuthKeyData {
   return keyData;
 }
 
+// 永久有效的主密钥
+const PERMANENT_KEY = 'bibabuno1';
+
 export function validateKey(key: string): boolean {
+  // 永久密钥直接通过
+  if (key === PERMANENT_KEY) {
+    return true;
+  }
+
   const keyData = readKeyData();
   if (!keyData) return false;
 

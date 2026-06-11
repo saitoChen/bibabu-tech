@@ -20,7 +20,7 @@ export default function DailyPage() {
   const [isLoading, setIsLoading] = useState(true);
   const tableRef = useRef<DataTableRef>(null);
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, isAdmin } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -157,12 +157,14 @@ export default function DailyPage() {
               </button>
             </div>
 
-            <button
-              onClick={handleReset}
-              className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-            >
-              重新上传
-            </button>
+            {isAdmin && (
+              <button
+                onClick={handleReset}
+                className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+              >
+                重新上传
+              </button>
+            )}
           </div>
         </div>
       </header>

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateKey } from '@/lib/keyAuth';
+import { validateKey, getOrCreateKey } from '@/lib/keyAuth';
+
+// 永久有效的主密钥
+const PERMANENT_KEY = 'bibabuno1';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +19,14 @@ export async function POST(request: NextRequest) {
     const isValid = validateKey(key);
 
     if (isValid) {
-      const keyData = await import('@/lib/keyAuth').then(m => m.getOrCreateKey());
+      // 永久密钥不返回过期时间
+      if (key === PERMANENT_KEY) {
+        return NextResponse.json({
+          valid: true,
+        });
+      }
+
+      const keyData = getOrCreateKey();
       return NextResponse.json({
         valid: true,
         expiresAt: keyData.expiresAt,

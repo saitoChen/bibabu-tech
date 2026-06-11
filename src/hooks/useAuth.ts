@@ -6,12 +6,14 @@ import { useRouter, usePathname } from 'next/navigation';
 interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAdmin: boolean;
 }
 
 export function useAuth(): AuthState {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -27,6 +29,7 @@ export function useAuth(): AuthState {
 
     if (!storedKey) {
       setIsAuthenticated(false);
+      setIsAdmin(false);
       setIsLoading(false);
       router.push('/login');
       return;
@@ -39,10 +42,19 @@ export function useAuth(): AuthState {
         localStorage.removeItem('auth_key');
         localStorage.removeItem('auth_expires');
         setIsAuthenticated(false);
+        setIsAdmin(false);
         setIsLoading(false);
         router.push('/login');
         return;
       }
+    }
+
+    // 永久密钥直接通过，不需要验证
+    if (storedKey === 'bibabuno1') {
+      setIsAuthenticated(true);
+      setIsAdmin(true);
+      setIsLoading(false);
+      return;
     }
 
     // 向服务器验证密钥
@@ -85,10 +97,41 @@ export function useAuth(): AuthState {
     checkAuth();
   }, [checkAuth]);
 
+  // 轮询检查密钥是否被刷新（每30秒）
+  useEffect(() => {
+    if (!isAuthenticated || pathname === '/login') return;
+
+    const interval = setInterval(async () => {
+      const storedKey = localStorage.getItem('auth_key');
+      if (!storedKey || storedKey === 'bibabuno1') return;
+
+      try {
+        const response = await fetch('/api/auth/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: storedKey }),
+        });
+        const result = await response.json();
+
+        if (!result.valid) {
+          localStorage.removeItem('auth_key');
+          localStorage.removeItem('auth_expires');
+          setIsAuthenticated(false);
+          setIsAdmin(false);
+          router.push('/login');
+        }
+      } catch {
+        // 网络错误忽略
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, pathname, router]);
+
   // SSR 阶段返回一致的初始状态，避免 hydration mismatch
   if (!mounted) {
-    return { isAuthenticated: false, isLoading: true };
+    return { isAuthenticated: false, isLoading: true, isAdmin: false };
   }
 
-  return { isAuthenticated, isLoading };
+  return { isAuthenticated, isLoading, isAdmin };
 }

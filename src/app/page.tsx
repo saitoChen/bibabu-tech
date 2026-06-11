@@ -18,7 +18,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, isAdmin } = useAuth();
 
   const saveData = async (data: SheetData, name: string) => {
     try {
@@ -96,6 +96,12 @@ export default function Home() {
   }
 
   if (!isAuthenticated) {
+    return null;
+  }
+
+  // 非管理员重定向到日报页面
+  if (!isAdmin) {
+    router.push('/daily');
     return null;
   }
 
