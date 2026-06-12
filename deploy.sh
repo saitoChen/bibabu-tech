@@ -5,7 +5,7 @@
 
 set -e
 
-PROJECT_DIR="/project/bibabu-tech"
+PROJECT_DIR="/root/project/bibabu-tech"
 LOG_DIR="/var/log/pm2"
 NGINX_CONFIG="/etc/nginx/sites-available/bibabu"
 
