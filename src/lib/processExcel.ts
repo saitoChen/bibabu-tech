@@ -80,8 +80,8 @@ export async function parseExcelFile(file: File): Promise<SheetData> {
                   if (isRedColor([r, g, b])) {
                     color = 'red';
                   }
-                } else if (part.font.color.rgb) {
-                  const rgb = part.font.color.rgb;
+                } else if ((part.font.color as any).rgb) {
+                  const rgb = (part.font.color as any).rgb;
                   const r = parseInt(rgb.slice(0, 2), 16);
                   const g = parseInt(rgb.slice(2, 4), 16);
                   const b = parseInt(rgb.slice(4, 6), 16);
@@ -112,8 +112,8 @@ export async function parseExcelFile(file: File): Promise<SheetData> {
                     if (isRedColor([r, g, b])) {
                       color = 'red';
                     }
-                  } else if (part.font.color.rgb) {
-                    const rgb = part.font.color.rgb;
+                  } else if ((part.font.color as any).rgb) {
+                    const rgb = (part.font.color as any).rgb;
                     const r = parseInt(rgb.slice(0, 2), 16);
                     const g = parseInt(rgb.slice(2, 4), 16);
                     const b = parseInt(rgb.slice(4, 6), 16);
@@ -150,8 +150,8 @@ export async function parseExcelFile(file: File): Promise<SheetData> {
             if (isRedColor([r, g, b])) {
               color = 'red';
             }
-          } else if (font.color.rgb) {
-            const rgb = font.color.rgb;
+          } else if ((font.color as any).rgb) {
+            const rgb = (font.color as any).rgb;
             const r = parseInt(rgb.slice(0, 2), 16);
             const g = parseInt(rgb.slice(2, 4), 16);
             const b = parseInt(rgb.slice(4, 6), 16);
@@ -162,12 +162,12 @@ export async function parseExcelFile(file: File): Promise<SheetData> {
             if (font.color.theme === 5) {
               color = 'red';
             }
-          } else if (font.color.indexed) {
+          } else if ((font.color as any).indexed) {
             const indexedColors = [
               'black', 'white', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'
             ];
-            if (font.color.indexed >= 2 && font.color.indexed <= 6) {
-              color = indexedColors[font.color.indexed];
+            if ((font.color as any).indexed >= 2 && (font.color as any).indexed <= 6) {
+              color = indexedColors[(font.color as any).indexed];
             }
           }
         }
@@ -179,8 +179,8 @@ export async function parseExcelFile(file: File): Promise<SheetData> {
       if (!color && excelCell.style && excelCell.style.font) {
         const styleFont = excelCell.style.font;
         if (styleFont.color) {
-          if (styleFont.color.rgb) {
-            const rgb = styleFont.color.rgb;
+          if ((styleFont.color as any).rgb) {
+            const rgb = (styleFont.color as any).rgb;
             const r = parseInt(rgb.slice(0, 2), 16);
             const g = parseInt(rgb.slice(2, 4), 16);
             const b = parseInt(rgb.slice(4, 6), 16);
@@ -193,8 +193,8 @@ export async function parseExcelFile(file: File): Promise<SheetData> {
         }
       }
 
-      if (!color && workbook.theme) {
-        const colorScheme = workbook.theme.colorScheme;
+      if (!color && (workbook as any).theme) {
+        const colorScheme = (workbook as any).theme.colorScheme;
         if (colorScheme && colorScheme.accent1) {
           if (isRedColor([colorScheme.accent1.r, colorScheme.accent1.g, colorScheme.accent1.b])) {
             color = 'red';
@@ -205,8 +205,8 @@ export async function parseExcelFile(file: File): Promise<SheetData> {
       if (!color && excelCell.style && excelCell.style.font) {
         const styleFont = excelCell.style.font;
         if (styleFont.color) {
-          if (styleFont.color.rgb) {
-            const rgb = styleFont.color.rgb;
+          if ((styleFont.color as any).rgb) {
+            const rgb = (styleFont.color as any).rgb;
             const r = parseInt(rgb.slice(0, 2), 16);
             const g = parseInt(rgb.slice(2, 4), 16);
             const b = parseInt(rgb.slice(4, 6), 16);
