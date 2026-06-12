@@ -109,14 +109,12 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl overflow-hidden">
+              <img src="/avator.webp" alt="logo" className="w-full h-full object-cover" />
+            </div>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2">题材节奏表</h1>
+            <p className="text-gray-500">上传 Excel </p>
           </div>
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">日报</h1>
-          <p className="text-gray-500">上传 Excel </p>
-        </div>
 
         <div
           className={`relative border-2 border-dashed rounded-xl p-8 transition-all duration-200 ${
@@ -179,7 +177,7 @@ export default function Home() {
             onClick={() => router.push('/daily')}
             className="px-4 py-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
           >
-            进入日报页面
+            进入题材节奏表
           </button>
         </div>
       </div>

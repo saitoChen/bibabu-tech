@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Bibabu 日报",
+  title: "比巴卜作手",
   description: "Bibabu 日报数据展示",
   icons: {
     icon: "/avator.webp",
